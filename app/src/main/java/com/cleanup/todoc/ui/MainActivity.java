@@ -2,7 +2,6 @@ package com.cleanup.todoc.ui;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,34 +15,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.cleanup.todoc.R;
 import com.cleanup.todoc.database.SaveMyTripDatabase;
-import com.cleanup.todoc.database.dao.TaskDao;
+import com.cleanup.todoc.di.DI;
 import com.cleanup.todoc.model.Project;
 import com.cleanup.todoc.model.Task;
-
-import java.util.ArrayList;
-import java.util.Collections;
+import com.cleanup.todoc.service.TaskApiService;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements TasksAdapter.DeleteTaskListener {
 
-    @NonNull
-    private List<Task> allTasks = new ArrayList<>();
-    private List<Project> allProjects = new ArrayList<>();
-
     private TasksAdapter adapter;
-
-    @NonNull
-    private SortMethod sortMethod = SortMethod.NONE;
+    private TaskApiService apiService;
 
     @Nullable
     public AlertDialog dialog = null;
@@ -79,15 +66,13 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
         listTasks = findViewById(R.id.list_tasks);
         lblNoTasks = findViewById(R.id.lbl_no_task);
 
-        TaskViewModel viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
-        adapter = new TasksAdapter(allTasks, this);
-        viewModel.tasksList.observe(this, list -> adapter.submitList(allTasks));
+        adapter = new TasksAdapter(this);
+        apiService = DI.getNewInstanceApiService(getDatabase());
 
         listTasks.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
         listTasks.setAdapter(adapter);
 
-        allTasks = Objects.requireNonNull(getDatabase().taskDao().getAll().getValue());
-        allProjects = getDatabase().projectDao().getAll();
+        updateList();
 
         findViewById(R.id.fab_add_task).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,26 +97,43 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
+        TaskApiService.SortMethod sortMethod = apiService.getSortMethod();
+
         if (id == R.id.filter_alphabetical) {
-            sortMethod = SortMethod.ALPHABETICAL;
+            sortMethod = TaskApiService.SortMethod.ALPHABETICAL;
         } else if (id == R.id.filter_alphabetical_inverted) {
-            sortMethod = SortMethod.ALPHABETICAL_INVERTED;
+            sortMethod = TaskApiService.SortMethod.ALPHABETICAL_INVERTED;
         } else if (id == R.id.filter_oldest_first) {
-            sortMethod = SortMethod.OLD_FIRST;
+            sortMethod = TaskApiService.SortMethod.OLD_FIRST;
         } else if (id == R.id.filter_recent_first) {
-            sortMethod = SortMethod.RECENT_FIRST;
+            sortMethod = TaskApiService.SortMethod.RECENT_FIRST;
         }
 
-        updateTasks();
+        apiService.setSortMethod(sortMethod);
+        updateList();
 
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onDeleteTask(Task task) {
-        allTasks.remove(task);
-        getDatabase().taskDao().delete(task);
-        updateTasks();
+        apiService.deleteTask(task);
+        updateList();
+    }
+
+    public void updateList()
+    {
+        List<Task> allTasks = apiService.getTasks();
+
+        if (allTasks.size() == 0) {
+            lblNoTasks.setVisibility(View.VISIBLE);
+            listTasks.setVisibility(View.GONE);
+        } else {
+            lblNoTasks.setVisibility(View.GONE);
+            listTasks.setVisibility(View.VISIBLE);
+        }
+
+        adapter.submitList(allTasks);
     }
 
     /**
@@ -203,38 +205,8 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
      * @param task the task to be added to the list
      */
     private void addTask(@NonNull Task task) {
-        allTasks.add(task);
-        getDatabase().taskDao().insertAll(task);
-        updateTasks();
-    }
-
-    /**
-     * Updates the list of tasks in the UI
-     */
-    private void updateTasks() {
-        if (allTasks.size() == 0) {
-            lblNoTasks.setVisibility(View.VISIBLE);
-            listTasks.setVisibility(View.GONE);
-        } else {
-            lblNoTasks.setVisibility(View.GONE);
-            listTasks.setVisibility(View.VISIBLE);
-            switch (sortMethod) {
-                case ALPHABETICAL:
-                    Collections.sort(allTasks, new Task.TaskAZComparator());
-                    break;
-                case ALPHABETICAL_INVERTED:
-                    Collections.sort(allTasks, new Task.TaskZAComparator());
-                    break;
-                case RECENT_FIRST:
-                    Collections.sort(allTasks, new Task.TaskRecentComparator());
-                    break;
-                case OLD_FIRST:
-                    Collections.sort(allTasks, new Task.TaskOldComparator());
-                    break;
-
-            }
-            adapter.updateTasks(allTasks);
-        }
+        apiService.createTask(task);
+        updateList();
     }
 
     /**
@@ -284,36 +256,10 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
      * Sets the data of the Spinner with projects to associate to a new task
      */
     private void populateDialogSpinner() {
-        final ArrayAdapter<Project> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, allProjects);
+        final ArrayAdapter<Project> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, apiService.getProjects());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         if (dialogSpinner != null) {
             dialogSpinner.setAdapter(adapter);
         }
-    }
-
-    /**
-     * List of all possible sort methods for task
-     */
-    private enum SortMethod {
-        /**
-         * Sort alphabetical by name
-         */
-        ALPHABETICAL,
-        /**
-         * Inverted sort alphabetical by name
-         */
-        ALPHABETICAL_INVERTED,
-        /**
-         * Lastly created first
-         */
-        RECENT_FIRST,
-        /**
-         * First created first
-         */
-        OLD_FIRST,
-        /**
-         * No sort
-         */
-        NONE
     }
 }

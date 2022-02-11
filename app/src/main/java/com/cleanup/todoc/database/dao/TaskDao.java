@@ -13,7 +13,7 @@ import java.util.List;
 @Dao
 public interface TaskDao {
     @Query("SELECT * FROM task")
-    LiveData<List<Task>> getAll();
+    List<Task> getAll();
 
     @Query("SELECT * FROM task WHERE id IN (:taskIds)")
     List<Task> loadAllByIds(int[] taskIds);
