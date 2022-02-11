@@ -3,6 +3,10 @@ package com.cleanup.todoc.model;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.ForeignKey;
+import androidx.room.PrimaryKey;
 
 import java.util.Comparator;
 
@@ -11,15 +15,23 @@ import java.util.Comparator;
  *
  * @author Gaëtan HERFRAY
  */
+@Entity(foreignKeys = @ForeignKey(
+        entity = Project.class,
+        parentColumns = "id",
+        childColumns = "project_id",
+        onDelete = ForeignKey.CASCADE
+))
 public class Task {
     /**
      * The unique identifier of the task
      */
+    @PrimaryKey
     private long id;
 
     /**
      * The unique identifier of the project associated to the task
      */
+    @ColumnInfo(name = "project_id")
     private long projectId;
 
     /**
@@ -28,11 +40,13 @@ public class Task {
     // Suppress warning because setName is called in constructor
     @SuppressWarnings("NullableProblems")
     @NonNull
+    @ColumnInfo(name = "name")
     private String name;
 
     /**
      * The timestamp when the task has been created
      */
+    @ColumnInfo(name = "creation_timestamp")
     private long creationTimestamp;
 
     /**
@@ -78,13 +92,29 @@ public class Task {
     }
 
     /**
-     * Returns the project associated to the task.
+     * Returns the projectID associated to the task.
      *
-     * @return the project associated to the task
+     * @return the projectID associated to the task
      */
     @Nullable
+    public long getProjectId() {
+        return (long) this.projectId;
+    }
+
+    @Nullable
     public Project getProject() {
-        return Project.getProjectById(projectId);
+        return Project.getProjectById(this.projectId);
+    }
+
+    public boolean equals(Task otherTask)
+    {
+        if (this == otherTask) return true;
+        if (otherTask == null) return false;
+
+        if (this.projectId != otherTask.getProjectId()) return false;
+        if (!this.name.equals(otherTask.getName())) return false;
+
+        return true;
     }
 
     /**
@@ -104,6 +134,12 @@ public class Task {
      */
     private void setName(@NonNull String name) {
         this.name = name;
+    }
+
+
+    @Nullable
+    public long getCreationTimestamp() {
+        return (long) this.creationTimestamp;
     }
 
     /**

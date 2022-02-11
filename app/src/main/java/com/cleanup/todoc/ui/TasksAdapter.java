@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleanup.todoc.R;
@@ -21,7 +23,7 @@ import java.util.List;
  *
  * @author Gaëtan HERFRAY
  */
-public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
+public class TasksAdapter extends ListAdapter<Task, TasksAdapter.TaskViewHolder> {
     /**
      * The list of tasks the adapter deals with
      */
@@ -40,6 +42,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
      * @param tasks the list of tasks the adapter deals with to set
      */
     TasksAdapter(@NonNull final List<Task> tasks, @NonNull final DeleteTaskListener deleteTaskListener) {
+        super(DIFF_CALLBACK);
         this.tasks = tasks;
         this.deleteTaskListener = deleteTaskListener;
     }
@@ -70,6 +73,23 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     public int getItemCount() {
         return tasks.size();
     }
+
+    public static final DiffUtil.ItemCallback<Task> DIFF_CALLBACK =
+            new DiffUtil.ItemCallback<Task>() {
+                @Override
+                public boolean areItemsTheSame(
+                        @NonNull Task oldTask, @NonNull Task newTask) {
+                    // User properties may have changed if reloaded from the DB, but ID is fixed
+                    return oldTask.getId() == newTask.getId();
+                }
+                @Override
+                public boolean areContentsTheSame(
+                        @NonNull Task oldTask, @NonNull Task newTask) {
+                    // NOTE: if you use equals, your object must properly override Object#equals()
+                    // Incorrectly returning false here will result in too many animations.
+                    return oldTask.equals(newTask);
+                }
+            };
 
     /**
      * Listener for deleting tasks
