@@ -21,6 +21,9 @@ public interface TaskDao {
     @Query("SELECT * FROM task WHERE name LIKE :name LIKE :last LIMIT 1")
     Task findByName(String name, String last);
 
+    @Query("SELECT MAX(id) FROM task")
+    int getMaxId();
+
     @Insert
     void insertAll(Task... tasks);
 

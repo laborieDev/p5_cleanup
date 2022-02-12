@@ -9,9 +9,6 @@ import java.util.List;
 
 public class DummyTaskApiService implements TaskApiService {
 
-    private List<Task> tasks;
-    private List<Project> projects;
-
     private final SaveMyTripDatabase database;
     private SortMethod sortMethod = SortMethod.NONE;
 
@@ -45,6 +42,11 @@ public class DummyTaskApiService implements TaskApiService {
         return allTasks;
     }
 
+    public int getMaxId()
+    {
+        return database.taskDao().getMaxId();
+    }
+
     public SortMethod getSortMethod()
     {
         return sortMethod;
@@ -72,14 +74,7 @@ public class DummyTaskApiService implements TaskApiService {
         database.taskDao().insertAll(task);
     }
 
-//    public Task getTask(int position)
-//    {
-//        return tasks.get(position);
-//    }
-
     public List<Project> getProjects() {
         return database.projectDao().getAll();
     }
-
-
 }

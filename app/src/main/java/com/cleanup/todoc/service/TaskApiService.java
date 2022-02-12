@@ -14,6 +14,12 @@ public interface TaskApiService {
     List<Task> getTasks();
 
     /**
+     * Get last id of all Tasks
+     * @return id
+     */
+    int getMaxId();
+
+    /**
      * Delete a Task
      * @param task
      */
@@ -25,16 +31,22 @@ public interface TaskApiService {
      */
     void createTask(Task task);
 
-//    /**
-//     * Create a Task task
-//     * @param position
-//     * @return {@link Task}
-//     */
-//    Task getTask(int position);
-
+    /**
+     * Get all projects
+     * @return projects
+     */
     List<Project> getProjects();
 
+    /**
+     * Get all sort methods enum
+     * @return sortMethod
+     */
     public SortMethod getSortMethod();
+
+    /**
+     * Set actual used sort method
+     * @param sortMethod
+     */
     public void setSortMethod(SortMethod sortMethod);
 
     /**
