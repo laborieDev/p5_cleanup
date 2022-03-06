@@ -2,18 +2,13 @@ package com.cleanup.todoc;
 
 import com.cleanup.todoc.database.SaveMyTripDatabase;
 import com.cleanup.todoc.di.DI;
-import com.cleanup.todoc.model.Project;
 import com.cleanup.todoc.model.Task;
 import com.cleanup.todoc.service.TaskApiService;
-import com.cleanup.todoc.ui.MainActivity;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -27,16 +22,12 @@ import android.content.Context;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.ext.junit.rules.ActivityScenarioRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
  * Unit tests for tasks
  *
  * @author Gaëtan HERFRAY
  */
-@RunWith(AndroidJUnit4.class)
 public class TaskUnitTest {
 
     private SaveMyTripDatabase database;
@@ -50,18 +41,16 @@ public class TaskUnitTest {
     }
 
     @After
-    public void closeDb() throws IOException {
+    public void closeDb() {
         database.close();
     }
 
     @Test
-    public void test_projects()
-    {
-        List<Project> allProjects = apiService.getProjects();
-
-        assertEquals(3, allProjects.size());
+    public void test_projects() {
+        List<Task> allTasks = apiService.getTasks();
+        assertSame(allTasks.size(), 0);
     }
-//
+
 //    @Test
 //    public void test_az_comparator() {
 //        final Task task1 = new Task(1, 1, "aaa", 123);
