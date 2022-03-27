@@ -34,7 +34,6 @@ import java.util.List;
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 @RunWith(AndroidJUnit4.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TaskUnitTest
 {
     private TaskDao taskDao;
@@ -63,7 +62,7 @@ public class TaskUnitTest
         }
 
         for (int i = INIT_TASK_LIST_FIRST_ID; i <= INIT_TASK_LIST_SIZE; i++) {
-            Task newTask = new Task(i, lastProjectId, "Tâche " + i, new Date().getTime());
+            Task newTask = new Task(i, lastProjectId, "Tâche example " + i, new Date().getTime());
             taskDao.insertAll(newTask);
         }
     }
@@ -119,7 +118,7 @@ public class TaskUnitTest
         String name = "Test";
 
         Task newTask = new Task(id, project.getId(), name, new Date().getTime());
-        taskDao.insertAll(newTask);
+        apiService.createTask(newTask);
 
         List<Task> allTasks = apiService.getTasks();
         Task lastTask = allTasks.get(allTasks.size() - 1);
@@ -129,9 +128,45 @@ public class TaskUnitTest
 
     @Test
     public void givenFirstTaskWhenSetSortableThenTaskIdEqualsToLastId() throws Exception {
+        List<Task> initAllTasks = apiService.getTasks();
+
+        for(Task task: initAllTasks) {
+            apiService.deleteTask(task);
+        }
+
+        long newID = (long) apiService.getMaxId() + 1;
+        Project project = apiService.getProjects().get(0);
+
+        Task newTask = new Task(newID, project.getId(), "aaa Tâche example", new Date().getTime());
+        apiService.createTask(newTask);
+
+        newID = (long) apiService.getMaxId() + 1;
+        newTask = new Task(newID, project.getId(), "zzz Tâche example", new Date().getTime());
+        apiService.createTask(newTask);
+
+        newID = (long) apiService.getMaxId() + 1;
+        newTask = new Task(newID, project.getId(), "hhh Tâche example", new Date().getTime());
+        apiService.createTask(newTask);
+
+        // OLD to RECENT
         apiService.setSortMethod(TaskApiService.SortMethod.OLD_FIRST);
         Task lastTask = apiService.getTasks().get(0);
+        assertThat(lastTask.getName(), equalTo("aaa Tâche example"));
 
-        assertThat(lastTask.getId(), equalTo((long) INIT_PROJECT_LIST_SIZE));
+        // NAME A to Z
+        apiService.setSortMethod(TaskApiService.SortMethod.ALPHABETICAL);
+        lastTask = apiService.getTasks().get(0);
+        assertThat(lastTask.getName(), equalTo("aaa Tâche example"));
+
+        // NAME Z to A
+        apiService.setSortMethod(TaskApiService.SortMethod.ALPHABETICAL_INVERTED);
+        lastTask = apiService.getTasks().get(0);
+        assertThat(lastTask.getName(), equalTo("zzz Tâche example"));
+
+        // RECENT to OLD
+        apiService.setSortMethod(TaskApiService.SortMethod.RECENT_FIRST);
+        Task newLastTask = apiService.getTasks().get(0);
+        String name = newLastTask.getName();
+        assertThat(name, equalTo("hhh Tâche example"));
     }
 }
