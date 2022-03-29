@@ -137,15 +137,15 @@ public class TaskUnitTest
         long newID = (long) apiService.getMaxId() + 1;
         Project project = apiService.getProjects().get(0);
 
-        Task newTask = new Task(newID, project.getId(), "aaa Tâche example", new Date().getTime());
-        apiService.createTask(newTask);
+        Task newTask2 = new Task(newID, project.getId(), "aaa Tâche example", 1648550738);
+        apiService.createTask(newTask2);
 
         newID = (long) apiService.getMaxId() + 1;
-        newTask = new Task(newID, project.getId(), "zzz Tâche example", new Date().getTime());
-        apiService.createTask(newTask);
+        Task newTask1 = new Task(newID, project.getId(), "zzz Tâche example", 1748550738);
+        apiService.createTask(newTask1);
 
         newID = (long) apiService.getMaxId() + 1;
-        newTask = new Task(newID, project.getId(), "hhh Tâche example", new Date().getTime());
+        Task newTask = new Task(newID, project.getId(), "hhh Tâche example", 1848550738);
         apiService.createTask(newTask);
 
         // OLD to RECENT

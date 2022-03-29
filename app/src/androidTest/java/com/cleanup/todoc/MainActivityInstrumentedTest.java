@@ -58,7 +58,7 @@ public class MainActivityInstrumentedTest {
     @Rule
     public ActivityTestRule<MainActivity> rule = new ActivityTestRule<>(MainActivity.class);
 
-    @After
+    @Before
     public void tearDown() throws Exception {
         deleteAllAppData();
         Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
