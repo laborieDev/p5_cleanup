@@ -1,7 +1,7 @@
 # Cleanup
 
 Anthony LABORIE - Projet 5 de la formation Android
-OpenClassrooms - Février 2022
+OpenClassrooms - Mars 2022
 
 ## Télécharger le projet
 Pour télécharger le projet, veuillez vous rendre sur ce [lien](https://github.com/laborieDev/p5_cleanup).
