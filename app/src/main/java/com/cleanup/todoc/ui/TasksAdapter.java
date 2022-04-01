@@ -8,6 +8,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageView;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cleanup.todoc.R;
@@ -21,12 +23,7 @@ import java.util.List;
  *
  * @author Gaëtan HERFRAY
  */
-public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
-    /**
-     * The list of tasks the adapter deals with
-     */
-    @NonNull
-    private List<Task> tasks;
+public class TasksAdapter extends ListAdapter<Task, TaskViewHolder> {
 
     /**
      * The listener for when a task needs to be deleted
@@ -37,21 +34,10 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     /**
      * Instantiates a new TasksAdapter.
      *
-     * @param tasks the list of tasks the adapter deals with to set
      */
-    TasksAdapter(@NonNull final List<Task> tasks, @NonNull final DeleteTaskListener deleteTaskListener) {
-        this.tasks = tasks;
+    TasksAdapter(@NonNull final DeleteTaskListener deleteTaskListener) {
+        super(DIFF_CALLBACK);
         this.deleteTaskListener = deleteTaskListener;
-    }
-
-    /**
-     * Updates the list of tasks the adapter deals with.
-     *
-     * @param tasks the list of tasks the adapter deals with to set
-     */
-    void updateTasks(@NonNull final List<Task> tasks) {
-        this.tasks = tasks;
-        notifyDataSetChanged();
     }
 
     @NonNull
@@ -63,13 +49,25 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
 
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder taskViewHolder, int position) {
-        taskViewHolder.bind(tasks.get(position));
+        taskViewHolder.bind(getItem(position));
     }
 
-    @Override
-    public int getItemCount() {
-        return tasks.size();
-    }
+    public static final DiffUtil.ItemCallback<Task> DIFF_CALLBACK =
+            new DiffUtil.ItemCallback<Task>() {
+                @Override
+                public boolean areItemsTheSame(
+                        @NonNull Task oldTask, @NonNull Task newTask) {
+                    // User properties may have changed if reloaded from the DB, but ID is fixed
+                    return oldTask.getId() == newTask.getId();
+                }
+                @Override
+                public boolean areContentsTheSame(
+                        @NonNull Task oldTask, @NonNull Task newTask) {
+                    // NOTE: if you use equals, your object must properly override Object#equals()
+                    // Incorrectly returning false here will result in too many animations.
+                    return oldTask.equals(newTask);
+                }
+            };
 
     /**
      * Listener for deleting tasks
@@ -82,83 +80,83 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
          */
         void onDeleteTask(Task task);
     }
+}
+
+/**
+ * <p>ViewHolder for task items in the tasks list</p>
+ *
+ * @author Gaëtan HERFRAY
+ */
+class TaskViewHolder extends RecyclerView.ViewHolder {
+    /**
+     * The circle icon showing the color of the project
+     */
+    private final AppCompatImageView imgProject;
 
     /**
-     * <p>ViewHolder for task items in the tasks list</p>
-     *
-     * @author Gaëtan HERFRAY
+     * The TextView displaying the name of the task
      */
-    class TaskViewHolder extends RecyclerView.ViewHolder {
-        /**
-         * The circle icon showing the color of the project
-         */
-        private final AppCompatImageView imgProject;
+    private final TextView lblTaskName;
 
-        /**
-         * The TextView displaying the name of the task
-         */
-        private final TextView lblTaskName;
+    /**
+     * The TextView displaying the name of the project
+     */
+    private final TextView lblProjectName;
 
-        /**
-         * The TextView displaying the name of the project
-         */
-        private final TextView lblProjectName;
+    /**
+     * The delete icon
+     */
+    private final AppCompatImageView imgDelete;
 
-        /**
-         * The delete icon
-         */
-        private final AppCompatImageView imgDelete;
+    /**
+     * The listener for when a task needs to be deleted
+     */
+    private final TasksAdapter.DeleteTaskListener deleteTaskListener;
 
-        /**
-         * The listener for when a task needs to be deleted
-         */
-        private final DeleteTaskListener deleteTaskListener;
+    /**
+     * Instantiates a new TaskViewHolder.
+     *
+     * @param itemView the view of the task item
+     * @param deleteTaskListener the listener for when a task needs to be deleted to set
+     */
+    TaskViewHolder(@NonNull View itemView, @NonNull TasksAdapter.DeleteTaskListener deleteTaskListener) {
+        super(itemView);
 
-        /**
-         * Instantiates a new TaskViewHolder.
-         *
-         * @param itemView the view of the task item
-         * @param deleteTaskListener the listener for when a task needs to be deleted to set
-         */
-        TaskViewHolder(@NonNull View itemView, @NonNull DeleteTaskListener deleteTaskListener) {
-            super(itemView);
+        this.deleteTaskListener = deleteTaskListener;
 
-            this.deleteTaskListener = deleteTaskListener;
+        imgProject = itemView.findViewById(R.id.img_project);
+        lblTaskName = itemView.findViewById(R.id.lbl_task_name);
+        lblProjectName = itemView.findViewById(R.id.lbl_project_name);
+        imgDelete = itemView.findViewById(R.id.img_delete);
 
-            imgProject = itemView.findViewById(R.id.img_project);
-            lblTaskName = itemView.findViewById(R.id.lbl_task_name);
-            lblProjectName = itemView.findViewById(R.id.lbl_project_name);
-            imgDelete = itemView.findViewById(R.id.img_delete);
-
-            imgDelete.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    final Object tag = view.getTag();
-                    if (tag instanceof Task) {
-                        TaskViewHolder.this.deleteTaskListener.onDeleteTask((Task) tag);
-                    }
+        imgDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final Object tag = view.getTag();
+                if (tag instanceof Task) {
+                    TaskViewHolder.this.deleteTaskListener.onDeleteTask((Task) tag);
                 }
-            });
-        }
-
-        /**
-         * Binds a task to the item view.
-         *
-         * @param task the task to bind in the item view
-         */
-        void bind(Task task) {
-            lblTaskName.setText(task.getName());
-            imgDelete.setTag(task);
-
-            final Project taskProject = task.getProject();
-            if (taskProject != null) {
-                imgProject.setSupportImageTintList(ColorStateList.valueOf(taskProject.getColor()));
-                lblProjectName.setText(taskProject.getName());
-            } else {
-                imgProject.setVisibility(View.INVISIBLE);
-                lblProjectName.setText("");
             }
+        });
+    }
 
+    /**
+     * Binds a task to the item view.
+     *
+     * @param task the task to bind in the item view
+     */
+    void bind(Task task) {
+        lblTaskName.setText(task.getName());
+        imgDelete.setTag(task);
+
+        final Project taskProject = task.getProject();
+        if (taskProject != null) {
+            imgProject.setSupportImageTintList(ColorStateList.valueOf(taskProject.getColor()));
+            lblProjectName.setText(taskProject.getName());
+        } else {
+            imgProject.setVisibility(View.INVISIBLE);
+            lblProjectName.setText("");
         }
+
     }
 }
