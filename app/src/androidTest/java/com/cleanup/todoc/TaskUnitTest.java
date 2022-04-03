@@ -112,7 +112,7 @@ public class TaskUnitTest
     }
 
     @Test
-    public void givenLastTaskNameWhenAddTaskThenNewTashHasSameName() throws Exception {
+    public void givenLastTaskNameWhenAddTaskThenNewTaskHasSameName() throws Exception {
         long id = (long) apiService.getMaxId() + 1;
         Project project = apiService.getProjects().get(0);
         String name = "Test";
