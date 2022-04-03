@@ -127,7 +127,7 @@ public class TaskUnitTest
     }
 
     @Test
-    public void givenFirstTaskWhenSetSortableThenTaskIdEqualsToLastId() throws Exception {
+    public void givenFirstTaskWhenSetSortableThenTaskIdEqualsToGoodId() throws Exception {
         List<Task> initAllTasks = apiService.getTasks();
 
         for(Task task: initAllTasks) {
