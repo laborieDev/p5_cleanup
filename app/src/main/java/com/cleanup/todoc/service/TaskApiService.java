@@ -14,12 +14,6 @@ public interface TaskApiService {
     List<Task> getTasks();
 
     /**
-     * Get last id of all Tasks
-     * @return id
-     */
-    int getMaxId();
-
-    /**
      * Delete a Task
      * @param task
      */

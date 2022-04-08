@@ -24,6 +24,8 @@ import com.cleanup.todoc.di.DI;
 import com.cleanup.todoc.model.Project;
 import com.cleanup.todoc.model.Task;
 import com.cleanup.todoc.service.TaskApiService;
+import com.google.android.gms.common.util.CollectionUtils;
+
 import java.util.Date;
 import java.util.List;
 
@@ -99,14 +101,19 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
 
         TaskApiService.SortMethod sortMethod = apiService.getSortMethod();
 
-        if (id == R.id.filter_alphabetical) {
-            sortMethod = TaskApiService.SortMethod.ALPHABETICAL;
-        } else if (id == R.id.filter_alphabetical_inverted) {
-            sortMethod = TaskApiService.SortMethod.ALPHABETICAL_INVERTED;
-        } else if (id == R.id.filter_oldest_first) {
-            sortMethod = TaskApiService.SortMethod.OLD_FIRST;
-        } else if (id == R.id.filter_recent_first) {
-            sortMethod = TaskApiService.SortMethod.RECENT_FIRST;
+        switch (id) {
+            case R.id.filter_alphabetical:
+                sortMethod = TaskApiService.SortMethod.ALPHABETICAL;
+                break;
+            case R.id.filter_alphabetical_inverted:
+                sortMethod = TaskApiService.SortMethod.ALPHABETICAL_INVERTED;
+                break;
+            case R.id.filter_oldest_first:
+                sortMethod = TaskApiService.SortMethod.OLD_FIRST;
+                break;
+            case R.id.filter_recent_first:
+                sortMethod = TaskApiService.SortMethod.RECENT_FIRST;
+                break;
         }
 
         apiService.setSortMethod(sortMethod);
@@ -125,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
     {
         List<Task> allTasks = apiService.getTasks();
 
-        if (allTasks.size() == 0) {
+        if (CollectionUtils.isEmpty(allTasks)) {
             lblNoTasks.setVisibility(View.VISIBLE);
             listTasks.setVisibility(View.GONE);
         } else {
@@ -159,10 +166,7 @@ public class MainActivity extends AppCompatActivity implements TasksAdapter.Dele
             }
             // If both project and name of the task have been set
             else if (taskProject != null) {
-                long id = (long) apiService.getMaxId() + 1;
-
                 Task task = new Task(
-                        id,
                         taskProject.getId(),
                         taskName,
                         new Date().getTime()

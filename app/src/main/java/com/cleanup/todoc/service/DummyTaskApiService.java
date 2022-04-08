@@ -42,11 +42,6 @@ public class DummyTaskApiService implements TaskApiService {
         return allTasks;
     }
 
-    public int getMaxId()
-    {
-        return database.taskDao().getMaxId();
-    }
-
     public SortMethod getSortMethod()
     {
         return sortMethod;

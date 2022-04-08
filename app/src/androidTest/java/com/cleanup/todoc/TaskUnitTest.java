@@ -62,7 +62,7 @@ public class TaskUnitTest
         }
 
         for (int i = INIT_TASK_LIST_FIRST_ID; i <= INIT_TASK_LIST_SIZE; i++) {
-            Task newTask = new Task(i, lastProjectId, "Tâche example " + i, new Date().getTime());
+            Task newTask = new Task(lastProjectId, "Tâche example " + i, new Date().getTime());
             taskDao.insertAll(newTask);
         }
     }
@@ -95,13 +95,6 @@ public class TaskUnitTest
     /****** END INIT APP ******/
 
     @Test
-    public void givenMaxIdWhenAddTaskThenMaxIdEqualsToListSize() throws Exception {
-        long newID = apiService.getMaxId();
-        List<Task> allTasks = apiService.getTasks();
-        assertThat(newID, equalTo((long) allTasks.size()));
-    }
-
-    @Test
     public void givenFirstTaskWhenDeleteTaskThenTaskNotExists() throws Exception {
         List<Task> allTasks = apiService.getTasks();
         Task removeTask = allTasks.get(0);
@@ -113,11 +106,10 @@ public class TaskUnitTest
 
     @Test
     public void givenLastTaskNameWhenAddTaskThenNewTaskHasSameName() throws Exception {
-        long id = (long) apiService.getMaxId() + 1;
         Project project = apiService.getProjects().get(0);
         String name = "Test";
 
-        Task newTask = new Task(id, project.getId(), name, new Date().getTime());
+        Task newTask = new Task(project.getId(), name, new Date().getTime());
         apiService.createTask(newTask);
 
         List<Task> allTasks = apiService.getTasks();
@@ -134,18 +126,15 @@ public class TaskUnitTest
             apiService.deleteTask(task);
         }
 
-        long newID = (long) apiService.getMaxId() + 1;
         Project project = apiService.getProjects().get(0);
 
-        Task newTask2 = new Task(newID, project.getId(), "aaa Tâche example", 1648550738);
+        Task newTask2 = new Task(project.getId(), "aaa Tâche example", 1648550738);
         apiService.createTask(newTask2);
 
-        newID = (long) apiService.getMaxId() + 1;
-        Task newTask1 = new Task(newID, project.getId(), "zzz Tâche example", 1748550738);
+        Task newTask1 = new Task(project.getId(), "zzz Tâche example", 1748550738);
         apiService.createTask(newTask1);
 
-        newID = (long) apiService.getMaxId() + 1;
-        Task newTask = new Task(newID, project.getId(), "hhh Tâche example", 1848550738);
+        Task newTask = new Task(project.getId(), "hhh Tâche example", 1848550738);
         apiService.createTask(newTask);
 
         // OLD to RECENT
